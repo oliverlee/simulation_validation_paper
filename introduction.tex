@@ -1,0 +1,80 @@
+\documentclass[11pt,a4paper]{amsart}
+\usepackage{geometry}               % See geometry.pdf to learn the layout options. There are lots.
+\geometry{left = 3cm, right = 3cm, top = 3cm, bottom = 3cm}
+\usepackage[parfill]{parskip}       % Begin paragraphs with an empty line rather than an indent
+\usepackage[colorlinks=false]{hyperref}
+
+\frenchspacing                      % single space between sentences
+
+\title{Design and validation of a fixed-base bicycle simulator}
+%\author{Oliver Lee}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+%% overview on cycling
+%% address safety in cycling, understanding rider behavior
+Cycling is a common form of transportation in a number of countries.
+While cycling has long been prevalent as a cheap form of transportation in many developing countries,
+there has been a resurgence in ridership for developed countries as a cheap form of travel,
+not subject to the congestion of car traffic in large cities.
+These have a shown a large number of single vehicle accident, thus a better understanding of the bicycle rider system is
+beneficial in reducing these accidents and improving the safety of cyclists.
+
+%% history on bicycle and rider research
+While the bicycle has been used for transport since the 19th century\cite{wilson2004}, the body of work studying the
+vehicle is smaller relative to motorized vehicles such as motorcycles, cars, and planes.
+Whipple developed a model for the bicycle in 1899\cite{whipple1899} but it was not until 2007 that the model was
+experimentally validated\cite{kooijman2008}.
+Models, as well as real world experience, show the bicycle rider system to be unstable for a range of speeds;
+active control from the rider is required rider to stabilize the bicycle.
+Recent work in the field of bicycle dynamics has focused on identification of rider control
+models by means of experimental data collection\cite{delange2011,hess2012,hladun2015}.
+Data collected for lateral line tracking\cite{delange2011,hess2012}, lane change\cite{hladun2015}, and stabilization
+with roll torque disturbances\cite{delange2011,hess2012} were used for system identification and parameter estimation of
+the gains of the human controller.
+
+%% why is a simulator important (motivation for building a simulator)?
+% goal of system identification
+There are always limitations with simulators;
+certainly with a fixed-base, one is incapable of simulating the vestibular inputs.
+However, a simulator with high enough fidelity provides a number of benefits compared to using instrumented bicycles.
+Namely, reproducibility of experiments, ease of data collection, and improved safety in test environments.
+As the rider bicycle system is unstable, simulators allow for tests of scenarios that have high risk of injury if
+instrumented bicycles were to be used.
+
+Studies on system identification of drivers using (car) driving simulators?
+
+%% other simulators?
+Talk to Natalia about other bicycle and motorcycle simulators.
+
+There is little work focusing on human rider control using a bicycle simulator.
+De Lange created a simulator in Matlab with the rider controlling the virtual bicycle by means of a
+gamepad\cite{delange2011}.
+His simulator only provides visual and not vestibular or proprioceptive feedback and finds its use limited for
+analyzing rider control due to difficulty in controlling the bicycle.
+As a precursor to this work, Schwab and Recuero developed a simulator with actuated handlebars\cite{schwab2013},
+presenting the rider with visual and proprioceptive feedback.
+They find haptic handlebar feedback torque necessary for the rider to stabilize the bicycle.
+
+We begin with a description of the simulator.
+Then a test procedure to evaluate simulator fidelity is presented.
+Simulator data and data from naturalistic studies are compared and discussed.
+Finally, we end with some conclusions and suggestions for future work.
+
+\section{Simulator design}
+
+\section{Comparison of data to naturalistic studies}
+
+\section{Conclusions}
+
+\section{Acknowledgments}
+We gratefully acknowledge the European Commission for their support of the Marie Curie Initial Training Network (ITN)
+project Nr. 608092 “MOTORIST” (Motorcycle Rider Integrated Safety), www.motorist-ptw.eu.
+
+% include references that aren't explicitly cited
+\nocite{meijaard2007}
+\bibliography{references.bib}
+\bibliographystyle{plain}
+\end{document}

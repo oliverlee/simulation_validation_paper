@@ -1,0 +1,6 @@
+# latex output and build files
+build/
+
+# vim swap files
+*.swp
+

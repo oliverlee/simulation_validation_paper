@@ -1,4 +1,4 @@
-PROJECT=introduction
+PROJECT=bicycle_simulator_design
 BUILD_DIR=build
 
 .PHONY: directories

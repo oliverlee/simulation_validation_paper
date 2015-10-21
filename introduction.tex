@@ -7,7 +7,7 @@
 \geometry{left = 3cm, right = 3cm, top = 3cm, bottom = 3cm} % reduce margins
 \frenchspacing                      % single space between sentences
 
-\title{Design and validation of a fixed-base bicycle simulator}
+\title{Design and validation of a static bicycle simulator}
 %\author{Oliver Lee}
 
 
@@ -22,17 +22,18 @@
 %% overview on cycling
 %% address safety in cycling, understanding rider behavior
 Cycling is a common form of transportation in a number of countries.
-While cycling has long been prevalent as a cheap form of transportation in many developing countries,
+While it has long been prevalent as a low-cost form of transportation in many developing countries,
 there has been a resurgence in ridership for developed countries\cite{FIXME} due to a variety of factors including,
-cheap form of travel, not subject to the congestion of car traffic in large cities.
+not subject to the congestion of car traffic in large cities.
 The last few years have shown a large number of single vehicle bicycle accidents\cite{FIXME}.
-As there are no other vehicles, the cause of these accidents can be limited to bicycle handing qualities and
+As in single-vehicle accidents, the cause of these accidents can be limited to bicycle handing qualities and
 environmental factors.
 A better understanding of the bicycle rider system is beneficial in understanding these accidents and is necessary to
 reduce these in number and to improve the safety of cyclists.
 
 %% history on bicycle and rider research
-While the bicycle has been used for transport since the 19th century\cite{wilson2004}, the body of work studying the
+% FIXME: references used in 'Data collected for ..'
+The bicycle has been used for transport since the 19th century\cite{wilson2004}, however the body of work studying the
 vehicle is smaller relative to motorized vehicles such as motorcycles, cars, and planes.
 Whipple developed a model for the bicycle in 1899\cite{whipple1899} but it was not until 2007 that the model was
 experimentally validated\cite{kooijman2008}.
@@ -46,17 +47,19 @@ the gains of the human controller.
 
 %% why is a simulator important (motivation for building a simulator)?
 % goal of system identification
+In car driver behavior research, studies have commonly used driving simulators\cite{steen2011}.
+System identification has been used to evaluate performance-based driver steering models designed to match real driver
+behavior\cite{pilutti1999,steen2011}.
+To a smaller extent, this has also been done with motorcycle simulators have been used to study rider
+behavior\cite{kovacsova2015}.
 There are always limitations with simulators;
-certainly with a fixed-base, one is incapable of simulating the vestibular inputs.
+certainly with a static simulator, one is incapable of simulating the vestibular inputs.
+Studies from Crundall using static simulators suggest vestibular sensory input may not be necessary for system
+identification of motorcycle riders\cite{crundall2012}.
 However, a simulator with high enough fidelity provides a number of benefits compared to using instrumented bicycles.
 Namely, reproducibility of experiments, ease of data collection, and improved safety in test environments.
 As the rider bicycle system is unstable, simulators allow for tests of scenarios that have high risk of injury if
 instrumented bicycles were to be used.
-
-TODO: Studies on system identification of drivers using (car) driving simulators?
-
-%% other simulators?
-TODO: Talk to Natalia about other bicycle and motorcycle simulators.
 
 There is little work focusing on human rider control using a bicycle simulator.
 De Lange created a simulator in Matlab with the rider controlling the virtual bicycle by means of a
@@ -65,9 +68,13 @@ His simulator only provides visual and not vestibular or proprioceptive feedback
 analyzing rider control due to difficulty in controlling the bicycle.
 As a precursor to this work, Schwab and Recuero prototyped a simulator with actuated handlebars\cite{schwab2013},
 presenting the rider with visual and proprioceptive feedback.
-They find haptic handlebar feedback torque necessary for the rider to stabilize the bicycle in preliminary tests.
+In a preliminary study with two subjects, they find haptic handlebar feedback torque necessary for the rider to
+stabilize the bicycle;
+subjects failed to stabilize the bicycle for more than a few seconds without feedback torque.
 
-We begin with a description of the model used and overall design of the simulator.
+This work describes the design of a bicycle simulator that will be used for research in system identification and human
+rider control.
+We begin with a description of the model used and, at a high-level, the software and hardware design of the simulator.
 Then a test procedure to evaluate simulator fidelity is presented.
 Simulator data and data from naturalistic studies are compared and discussed.
 Finally, we end with some conclusions and suggestions for future work.

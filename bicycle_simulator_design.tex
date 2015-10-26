@@ -301,9 +301,30 @@ An example to generate the analytic expressions for $ \pitch$ and $ \pitchRate $
 Note that changes of the pitch angle $ \pitch $ are small and the first order approximation is zero due to symmetry of
 the bicycle model about the $ xz $-plane.
 
-\subsection{Implementation}
-
-key points to address:
+\section{Implementation}
+The simulator is implemented in three main components:
+\begin{itemize}
+    \item visualization engine
+    \item simulation engine
+    \item hardware controller
+\end{itemize}
+The three components are separate in both software and hardware.
+The simulation engine acts as a root node in the network topology and data is communicated over TCP/IP.
+\subsection{Visualization}
+Unity engine \\
+basic scene shape description \\
+model parameters and body trajectories are received from simulation \\
+\subsection{Simulation}
+Built on top of Eigen with separate modules for system model, control, and estimation \\
+2 loops running:
+\begin{itemize}
+    \item simulation loop - ~1000 Hz for sensor acquisition and computation of actuator commands\\
+        timing shows loop duration  $ < 1 $ ms, normally order of us\\
+        no RTOS is used, but profiling shows computation time to be quick enough even with OS interrupts\\
+        so we have enough ``determinism'' in timers
+    \item visualization loop - running slower (30 or 60? Hz). frame rate driven by Unity
+\end{itemize}
+simulation engine equation of motion implementation
 \begin{itemize}
     \item v parameterizes the system/equations of motion
     \item we compute the discrete time state space with:
@@ -323,6 +344,15 @@ key points to address:
         but there is no need to perform all the repeated integration steps as
         we obtain a difference equation. (plus measurement shows it to be faster)
 \end{itemize}
+\subsection{Hardware Interface}
+\subsection{Serialization Protocol}
+\subsubsection{Simulation-Visualization communication} \\
+flatbuffers \\
+efficient/fast binary serialization \\
+backwards compatible \\
+optional fields \\
+\subsubsection{Simulation-Hardware communication} \\
+Kollmorgen specified protocol \\
 
 \section{Hardware design?}
 

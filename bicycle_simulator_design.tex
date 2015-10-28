@@ -3,15 +3,18 @@
 \usepackage[parfill]{parskip}       % Begin paragraphs with an empty line rather than an indent
 \usepackage[table]{xcolor}          % xcolor with table
 \usepackage{bm}                     % bold math
+\usepackage{graphicx}               % include graphics
 \usepackage[
     colorlinks=true,
-    citecolor=black,
-    linkcolor=black,
+%    citecolor=black,
+%    linkcolor=black,
     urlcolor=blue,
 ]{hyperref} % make references into hyperlinks
 
 \geometry{left = 3cm, right = 3cm, top = 3cm, bottom = 3cm} % reduce margins
 \frenchspacing                      % single space between sentences
+
+\graphicspath{ {fig/} }
 
 \title{Design and validation of a static bicycle simulator}
 %\author{Oliver Lee}
@@ -54,7 +57,6 @@
 \newcommand{\yawRate}{\dot{\psi}}
 \newcommand{\rollRate}{\dot{\phi}}
 \newcommand{\steerRate}{\dot{\phi}}
-
 
 \begin{document}
 \maketitle
@@ -311,46 +313,103 @@ The simulator is implemented in three main components:
 The three components are separate in both software and hardware.
 The simulation engine acts as a root node in the network topology and data is communicated over TCP/IP.
 \subsection{Visualization}
-Unity engine \\
-basic scene shape description \\
-model parameters and body trajectories are received from simulation \\
+The simulator visualization is built using \href{https://unity3d.com/}{Unity}, a cross-platform game engine used to
+develop video games.
+The Unity Editor is used to create a virtual environment and defines a basic description for the bicycle model;
+an example of the virtual environment is provided in \autoref{fig:unity}.
+Sizes of the bicycle object shapes are provided by the simulation engine, dependent on the parameters used in the
+bicycle model.
+The coordinates describing the position and orientation of the bicycle within the virtual environment are calculated and
+transmitted by the simulation engine.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=\textwidth]{screenshot_2015-06-27_19-31-15.png}
+    \caption{Virtual environment with bicycle model}
+    \label{fig:unity}
+\end{figure}
+
 \subsection{Simulation}
-Built on top of Eigen with separate modules for system model, control, and estimation \\
-2 loops running:
-\begin{itemize}
-    \item simulation loop - ~1000 Hz for sensor acquisition and computation of actuator commands\\
-        timing shows loop duration  $ < 1 $ ms, normally order of us\\
-        no RTOS is used, but profiling shows computation time to be quick enough even with OS interrupts\\
-        so we have enough ``determinism'' in timers
-    \item visualization loop - running slower (30 or 60? Hz). frame rate driven by Unity
-\end{itemize}
-simulation engine equation of motion implementation
-\begin{itemize}
-    \item v parameterizes the system/equations of motion
-    \item we compute the discrete time state space with:
-        \begin{equation}
-        \exp(\begin{bmatrix} \stateMat & \inputMat \\ \bm{0} & \bm{0} \end{bmatrix}^T)
-            = \begin{bmatrix} \stateMat_d & \inputMat_d \\ \bm{0} & \bm{I} \end{bmatrix}
-        \end{equation}
-    \item Need to discretize Kalman noise covariance matrices!
-        https://en.wikipedia.org/wiki/Discretization
-    \item matrix exponential computed using scaling and squaring with
-        Pad{\'e} approximants\cite{higham2005} as implemented in Eigen\cite{eigenweb}
-    \item kinematic coordinates computed with ode solvers as they are nonlinear
-    \item states are discretized instead of integrated for efficiency\\
-        computation of matrix exponential only once for each foward speed v\\
-        ode integration is slower\cite{moler2003} (for computing the matrix exponential)
-        note that ode integration for a \textit{single} time step may be slower, \\
-        but there is no need to perform all the repeated integration steps as
-        we obtain a difference equation. (plus measurement shows it to be faster)
-\end{itemize}
-\subsection{Hardware Interface}
-\subsection{Serialization Protocol}
+The bicycle dynamics are simulated in \href{https://github.com/oliverlee/bicycle}{C++ code} using the
+\href{http://eigen.tuxfamily.org/index.php?title=Main_Page}{Eigen}\cite{eigenweb} template library for linear algebra
+operations.
+The dynamic equations and kinematic equations are computed in two separate routines and run at two different speeds.
+
+\subsubsection{Dynamics} \label{sec:imp_dyn}
+The dynamics loop simulates the \autoref{eq:ss}, and handles communication with the Kollmorgen motor driver.
+Measurement of steer angle, estimation of system state, computation of handlebar torque, and transmission of actuator
+commands occur within a 1000 Hz loop.
+As the bicycle model used in linear, the system is state space model is discretized and reformulated as a difference
+equation
+\begin{equation}
+\begin{aligned}
+    \state[k + 1] &= \stateMat_d \state[k] + \inputMat_d \sysInput[k] \\
+    \sysOutput[k] &= \outputMat_d \state[k] \label{eq:dtss}
+\end{aligned}
+\end{equation}
+where
+\begin{equation}
+\begin{aligned}
+    \begin{bmatrix} \stateMat_d & \inputMat_d \\ \bm{0} & \bm{I} \end{bmatrix}
+        &= \exp(\begin{bmatrix} \stateMat & \inputMat \\ \bm{0} & \bm{0} \end{bmatrix} T_s) \\
+    \outputMat_d &= \outputMat \label{eq:c2d}
+\end{aligned}
+\end{equation}
+and $ T_s $ is the sample time.
+The matrix exponential is computed using a scaling and squaring with Pad{\'e} approximants algorithm described by
+Higham\cite{higham2005}.
+While ODE integrators are commonly used, they do not take advantage of the fact that formulation of the equations of
+motion are linear and entries in the state and input matrices are constant for a given $ v $.
+This formulation allows replaces the typical integration step with a single matrix multiplication, requiring only that
+the discrete time state space be computed at each forward speed $ v $.
+% states are discretized instead of integrated for efficiency\\
+% computation of matrix exponential only once for each foward speed v\\
+% ode integration is slower\cite{moler2003} (for computing the matrix exponential)
+% note that ode integration for a \textit{single} time step may be slower, \\
+% but there is no need to perform all the repeated integration steps as
+% we obtain a difference equation. (plus measurement shows it to be faster)
+
+TODO: discrete time implementation of Kalman filter
+% Need to discretize Kalman noise covariance matrices!  https://en.wikipedia.org/wiki/Discretization
+
+\subsubsection{Kinematics}
+The kinematics loop calculates system coordinates required for visualization separately from the dynamics.
+Unity is used for visualization and the visual update rate is ~60 Hz; much slower than the haptic update rate.
+The ignorable coordinates are divided into two groups and calculated for each visual update.
+Rear wheel contact position $ \x $, $ \y $ and yaw angle $ \yaw $ are calculated by integration of \autoref{eq:kineq}
+via explicit method Dormand-Prince as implemented in \href{http://www.boost.org/}{Boost}.
+While the yaw angle $ \yaw $ is described as linear in terms of system state and it is possible to use a difference
+equation as is done in \autoref{sec:imp_dyn}, the three coordinates are computed in the same integration step.
+Pitch angle $ \pitch $ is calculated separately using Newton-Raphson and the previous value as an initial guess.
+
+%Built on top of Eigen with separate modules for system model, control, and estimation \\
+%2 loops running:
+%\begin{itemize}
+%    \item simulation loop - ~1000 Hz for sensor acquisition and computation of actuator commands\\
+%        timing shows loop duration  $ < 1 $ ms, normally order of us\\
+%        no RTOS is used, but profiling shows computation time to be quick enough even with OS interrupts\\
+%        so we have enough ``determinism'' in timers
+%\begin{itemize}
+%    \item states are discretized instead of integrated for efficiency\\
+%        computation of matrix exponential only once for each foward speed v\\
+%        ode integration is slower\cite{moler2003} (for computing the matrix exponential)
+%        note that ode integration for a \textit{single} time step may be slower, \\
+%        but there is no need to perform all the repeated integration steps as
+%        we obtain a difference equation. (plus measurement shows it to be faster)
+%\end{itemize}
+
+\subsection{Hardware interface}
+\subsection{Network communication}
+As the simulator involves communication between three nodes, data must be serialized and transmitted over a network.
+Serialization protocol differs depending on the send/receive nodes due to communication requirements/hardware
+advantages?
 \subsubsection{Simulation-Visualization communication} \\
-flatbuffers \\
-efficient/fast binary serialization \\
-backwards compatible \\
-optional fields \\
+Visual coordinates are transmitted between simulation and Unity using the FlatBuffers serialization library.
+The protocol allows allows access to serialized data with parsing or unpacking while supporting backwards and forwards
+compatibility.
+Data is sent through a predefined schema which may evolve over time, although a schema may only add fields if backwards
+and forwards compatibility is to be maintained.
+Data sent in a scheme may be marked as optional and no data is transmitted if the field is omitted.
 \subsubsection{Simulation-Hardware communication} \\
 Kollmorgen specified protocol \\
 

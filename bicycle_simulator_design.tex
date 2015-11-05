@@ -6,7 +6,7 @@
 \usepackage{graphicx}               % include graphics
 \usepackage[
     colorlinks=true,
-%    citecolor=black,
+    citecolor=black,
 %    linkcolor=black,
     urlcolor=blue,
 ]{hyperref} % make references into hyperlinks
@@ -65,21 +65,27 @@
 %% overview on cycling
 %% address safety in cycling, understanding rider behavior
 Cycling is a common form of transportation in a number of countries.
-While it has long been prevalent as a low-cost form of transportation in many developing countries,
-there has been a resurgence in ridership for developed countries\cite{FIXME} due to a variety of factors including,
-not subject to the congestion of car traffic in large cities.
-The last few years have shown a large number of single vehicle bicycle accidents\cite{FIXME}.
-As in single-vehicle accidents, the cause of these accidents can be limited to bicycle handing qualities and
-environmental factors.
+While cycling has long been prevalent as a low-cost form of transportation in many developing countries,
+there has been a resurgence in ridership for developed countries including
+the U.S.\cite{mckenzie2014}, the U.K.\cite{FIXME}, and throughout Europe\cite{FIXME}.
+%road traffic estimates in Great Britain, 2014
+A large proportion of non-fatal injuries to cyclists result from single bicycle crashes,
+with the proportion ranging from 60\% to 95\% for a number of countries in Europe\cite{schepers2014}.
+%As these do not involve other vehicles, the cause of these accidents can be limited to bicycle handing qualities and
+%environmental factors.
 A better understanding of the bicycle rider system is beneficial in understanding these accidents and is necessary to
 reduce these in number and to improve the safety of cyclists.
 
 %% history on bicycle and rider research
 % FIXME: references used in 'Data collected for ..'
-The bicycle has been used for transport since the 19th century\cite{wilson2004}, however the body of work studying the
+The bicycle has been used for transport since the 19th century\cite{wilson2004}, but the body of work studying this
 vehicle is smaller relative to motorized vehicles such as motorcycles, cars, and planes.
-Whipple developed a model for the bicycle in 1899\cite{whipple1899} but it was not until 2007 that the model was
-experimentally validated\cite{kooijman2008}.
+Whipple first developed a general model for the bicycle in 1899\cite{whipple1899}.
+A multitude of others have contributed to bicycle research; Meijaard presents a detailed history on bicycle dynamics and
+notes many of the seminal figures, along with verification of the correctness of the Whipple model\cite{meijaard2007}.
+Kooijman shows some experimental validation of this (uncontrolled) model within the predicted stable speed
+range\cite{kooijman2008}.
+%% FIXME: bicycle research history
 Models, as well as real world experience, show the bicycle rider system to be unstable for a range of speeds;
 active control from the rider is required rider to stabilize the bicycle.
 Recent work in the field of bicycle dynamics has focused on identification of rider control
@@ -93,73 +99,52 @@ the gains of the human controller.
 In car driver behavior research, studies have commonly used driving simulators\cite{steen2011}.
 System identification has been used to evaluate performance-based driver steering models designed to match real driver
 behavior\cite{pilutti1999,steen2011}.
-To a smaller extent, this has also been done with motorcycle simulators have been used to study rider
-behavior\cite{kovacsova2015}.
+To a smaller extent, this has also been done with motorcycle simulators for studying rider behavior\cite{kovacsova2015}.
 There are always limitations with simulators;
 certainly with a static simulator, one is incapable of simulating the vestibular inputs.
 Studies from Crundall using static simulators suggest vestibular sensory input may not be necessary for system
 identification of motorcycle riders\cite{crundall2012}.
+Additionally, rider lean control has been shown to be ineffective relative to steer control\cite{sharp2008}
+and experiments have shown very little upper body lean relative to the bicycle rear assembly when observing
+riders\cite{kooijman2009}.
+
 However, a simulator with high enough fidelity provides a number of benefits compared to using instrumented bicycles.
-Namely, reproducibility of experiments, ease of data collection, and improved safety in test environments.
+Namely, reproducibility of experiments, ease of data collection, and improved safety in test environments
+come from use of simulators over instrumented vehicles /in real-world environments\cite{dewinter2012}.
 As the rider bicycle system is unstable, simulators allow for tests of scenarios that have high risk of injury if
 instrumented bicycles were to be used.
 
-There is little work focusing on human rider control using a bicycle simulator.
-De Lange created a simulator in Matlab with the rider controlling the virtual bicycle by means of a
+There is little work focused on human rider control using a bicycle simulator.
+Plumert describes a bicycle simulator used to study rider behavior in traffic\cite{plumert2004} where an
+instrumented bicycle is used to determine motion in a virtual environment.
+% TODO: check other bicycle simulator research
+The study focuses on rider perception and accurate steering feel is not addressed.
+Other research using this simulator also focuses on rider behavior and decision making in
+traffic\cite{plumert2007,chihak2010,grechkin2013}.
+De Lange created a simulator in MATLAB with the rider controlling the virtual bicycle by means of a
 gamepad\cite{delange2011}.
-His simulator only provides visual and not vestibular or proprioceptive feedback and finds its use limited for
-analyzing rider control due to difficulty in controlling the bicycle.
+His simulator provides visual but not vestibular or proprioceptive feedback and de Lange determines it the
+simulator is not useful for analyzing rider control due to difficulty in controlling the bicycle.
 As a precursor to this work, Schwab and Recuero prototyped a simulator with actuated handlebars\cite{schwab2013},
 presenting the rider with visual and proprioceptive feedback.
-In a preliminary study with two subjects, they find haptic handlebar feedback torque necessary for the rider to
+In a preliminary study with two participants, they find haptic handlebar feedback torque necessary for the rider to
 stabilize the bicycle;
-subjects failed to stabilize the bicycle for more than a few seconds without feedback torque.
+participants failed to stabilize the bicycle for more than a few seconds without feedback torque.
 
-This work describes the design of a bicycle simulator that will be used for research in system identification and human
-rider control.
+This work describes the design of a bicycle simulator that will be used for primarily for research in system
+identification and human rider control.
+That is, the simulator was designed to accurate simulate steering dynamics and forces generated due to the
+bicycle-environment interface.
+However, this does not preclude the simulator from use in rider behavior studies.
+
 We begin with a description of the model used and, at a high-level, the software and hardware design of the simulator.
 Then a test procedure to evaluate simulator fidelity is presented.
 Simulator data and data from naturalistic studies are compared and discussed.
 Finally, we end with some conclusions and suggestions for future work.
 
-\section{Simulation of bicycle equations of motion}
+\section{Simulation of the bicycle equations of motion} \label{sec:sim_eom}
 \subsection{Steer Dynamics} \label{sec:steer_dynamics}
 \subsubsection{Whipple Linearized Model}
-
-\begin{table}
-    \centering
-    \begin{tabular}{|c|l|}
-        \hline
-        symbol & description \\
-        \hline
-        $ \x $ & rear wheel contact point in x-direction \\
-        $ \y $ & rear wheel contact point in y-direction \\
-        $ \pitch $ & rear frame pitch angle \\
-        $ \yaw $ & rear frame yaw angle \\
-        $ \roll $ & rear wheel roll angle \\
-        $ \steer $ & relative rotation between front and rear frame about steer-axis\\
-        \hline
-    \end{tabular}
-    \caption{Whipple coordinates}
-    \label{tab:coordinates}
-\end{table}
-
-\begin{table}
-    \centering
-    \begin{tabular}{|c|l|}
-        \hline
-        symbol & description \\
-        \hline
-        $ w $ & wheelbase \\
-        $ c $ & trail \\
-        $ \lambda $ & steer axis tilt \\
-        $ r_r $ & rear wheel radius \\
-        $ r_f $ & front wheel radius \\
-        \hline
-    \end{tabular}
-    \caption{Meijaard-Whipple parameters}
-    \label{tab:parameters}
-\end{table}
 
 The simulator uses the Whipple model\cite{whipple1899} along with a benchmark set of parameters generated by
 Meijaard\cite{meijaard2007}.
@@ -174,16 +159,16 @@ where
 $ \bm{q} = \begin{bmatrix} \roll & \steer \end{bmatrix}^T $,
 $ \dot{\bm{q}} = \begin{bmatrix} \rollRate & \steerRate \end{bmatrix}^T $,
 $ \ddot{\bm{q}} = \begin{bmatrix} \ddot{\roll} & \ddot{\steer} \end{bmatrix}^T $,
-$ \bm{f} = \begin{bmatrix} T_\roll & T_\steer \end{bmatrix}^T $ with $ T_\roll $ and $ T_\steer$ are the input roll
+$ \bm{f} = \begin{bmatrix} T_\roll & T_\steer \end{bmatrix}^T $ with $ T_\roll $ and $ T_\steer$ the input roll
 torque and steer torque of the system.
 $ \mass $ is the mass, $ \damping $ the damping, and $ \stiffness $ the stiffness of the system,
 parameterized by forward velocity $ v $ and $ g $ is gravitational acceleration.
 
-This model assumes an idealized contact between the bicycle tires and ground; no-slip knife-edge point contact.
-The rider is rigidly fixed to the bicycle rear assembly; experiments have shown very little upper body lean relative to
-the bicycle rear assembly\cite{kooijman2009}.
+This model assumes an idealized contact between the bicycle tires and ground, no-slip knife-edge point contact,
+and the rider is rigidly fixed to the bicycle rear assembly.
 The rider can apply a steer torque $ T_\steer $ but is unable to apply a roll torque $ T_\roll $ as there is no means to
-do so. At this time, there are no environmental factors that contribute a roll torque (such as crosswind) and as such,
+do so.
+There are no environmental factors that contribute a roll torque (such as crosswind) and as such,
 we always take $ T_\roll = 0 $ and can rewrite the input as $ \bm{f} = \begin{bmatrix} 0  & T_\steer \end{bmatrix}^T $.
 While the rider arms are necessary to provide the input steer torque $ T_\steer $, the movement of the arms is
 neglected in this model.
@@ -194,7 +179,7 @@ necessary to steer a bicycle are small with magnitudes commonly between 0 and 3 
 While sensors that can accurately measure torques in this range do exist, any measurements may suffer from large
 cross-torques induced by the rider in directions orthogonal to the steer axis.
 In these cases, others have designed ways to obtain an accurate measurement of steer torque\cite{moore2012}.
-However, given that we have access to a high resolution encoder to measure steer angle, we numerically compute the steer
+However, given that a high resolution encoder to measure steer angle, we numerically compute the steer
 angular acceleration $ \ddot{\steer} $ in order to estimate the rider applied steer torque $ T_\steer $.
 
 The dynamics of the physical handlebars are described by the following equation of motion
@@ -232,7 +217,7 @@ The state space matrices are defined as
     \outputMat &= \begin{bmatrix} 0 & 1 & 0 & 0 \end{bmatrix}
 \end{aligned}
 \end{equation}
-Note that only the system is still parameterized by forward speed $ v $  as can be seen by the expression for
+Note that the system is still parameterized by forward speed $ v $  as can be seen by the expression for
 state matrix $ \stateMat $.
 
 We find the observability matrix $ \bm{\mathcal{O}} $ to be full rank for all forward speeds except
@@ -293,9 +278,8 @@ yaw angle $ \yaw $ as calculated by Meijaard\cite{meijaard2007}
 Refer to \autoref{tab:parameters} for a description of the model parameters.
 Pitch angle $ \pitch $ is a dependent coordinate and the full nonlinear form cannot be expressed in a simple closed-form
 expression.
-It is more feasible to compute analytic expressions for $ \pitch $, $ \pitchRate $ as constraints and with the aid of a
-computer algebra system (such as SymPy\cite{sympy}) and solve using a standard root-finding algorithm such as
-Newton-Raphson.
+A simpler approach is to compute analytic expressions for $ \pitch $, $ \pitchRate $ as constraints, and with the aid of
+a computer algebra system (such as SymPy\cite{sympy}), and find the roots using an algorithm such as Newton-Raphson.
 As the constraint derivative can be defined analytically, is continuous, and a good initial guess exists (i.e. the pitch
 angle in the nominal configuration), we are guaranteed quadratic convergence.
 An example to generate the analytic expressions for $ \pitch$ and $ \pitchRate $ is given
@@ -303,8 +287,9 @@ An example to generate the analytic expressions for $ \pitch$ and $ \pitchRate $
 Note that changes of the pitch angle $ \pitch $ are small and the first order approximation is zero due to symmetry of
 the bicycle model about the $ xz $-plane.
 
-\section{Implementation}
-The simulator is implemented in three main components:
+\section{Software implementation}
+The simulation of the bicycle equations of motion as described in \autoref{sec:sim_eom} is implemented as three main
+components:
 \begin{itemize}
     \item visualization engine
     \item simulation engine
@@ -325,7 +310,7 @@ transmitted by the simulation engine.
 \begin{figure}
     \centering
     \includegraphics[width=\textwidth]{screenshot_2015-06-27_19-31-15.png}
-    \caption{Virtual environment with bicycle model}
+    \caption{Unity virtual environment with bicycle model}
     \label{fig:unity}
 \end{figure}
 
@@ -369,19 +354,19 @@ the discrete time state space be computed at each forward speed $ v $.
 % but there is no need to perform all the repeated integration steps as
 % we obtain a difference equation. (plus measurement shows it to be faster)
 
-TODO: discrete time implementation of Kalman filter
+TODO: discrete time implementation of Kalman filter\\
+selection of process and noise covariance
 % Need to discretize Kalman noise covariance matrices!  https://en.wikipedia.org/wiki/Discretization
 
 \subsubsection{Kinematics}
 The kinematics loop calculates system coordinates required for visualization separately from the dynamics.
-Unity is used for visualization and the visual update rate is ~60 Hz; much slower than the haptic update rate.
+Unity is used for visualization and updates at 60 Hz, slower than the haptic update rate.
 The ignorable coordinates are divided into two groups and calculated for each visual update.
 Rear wheel contact position $ \x $, $ \y $ and yaw angle $ \yaw $ are calculated by integration of \autoref{eq:kineq}
 via explicit method Dormand-Prince as implemented in \href{http://www.boost.org/}{Boost}.
 While the yaw angle $ \yaw $ is described as linear in terms of system state and it is possible to use a difference
 equation as is done in \autoref{sec:imp_dyn}, the three coordinates are computed in the same integration step.
 Pitch angle $ \pitch $ is calculated separately using Newton-Raphson and the previous value as an initial guess.
-
 %Built on top of Eigen with separate modules for system model, control, and estimation \\
 %2 loops running:
 %\begin{itemize}
@@ -411,11 +396,46 @@ Data is sent through a predefined schema which may evolve over time, although a 
 and forwards compatibility is to be maintained.
 Data sent in a scheme may be marked as optional and no data is transmitted if the field is omitted.
 \subsubsection{Simulation-Hardware communication} \\
-Kollmorgen specified protocol \\
+Kollmorgen specified protocol
 
 \section{Hardware design?}
 
 \section{Comparison of data to naturalistic studies}
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|l|}
+        \hline
+        symbol & description \\
+        \hline
+        $ \x $ & rear wheel contact point in x-direction \\
+        $ \y $ & rear wheel contact point in y-direction \\
+        $ \pitch $ & rear frame pitch angle \\
+        $ \yaw $ & rear frame yaw angle \\
+        $ \roll $ & rear wheel roll angle \\
+        $ \steer $ & relative rotation between front and rear frame about steer-axis\\
+        \hline
+    \end{tabular}
+    \caption{Whipple coordinates}
+    \label{tab:coordinates}
+\end{table}
+
+\begin{table}
+    \centering
+    \begin{tabular}{|c|l|}
+        \hline
+        symbol & description \\
+        \hline
+        $ w $ & wheelbase \\
+        $ c $ & trail \\
+        $ \lambda $ & steer axis tilt \\
+        $ r_r $ & rear wheel radius \\
+        $ r_f $ & front wheel radius \\
+        \hline
+    \end{tabular}
+    \caption{Meijaard-Whipple parameters}
+    \label{tab:parameters}
+\end{table}
 
 \section{Conclusions}
 

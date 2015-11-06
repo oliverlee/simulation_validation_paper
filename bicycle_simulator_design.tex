@@ -179,7 +179,7 @@ necessary to steer a bicycle are small with magnitudes commonly between 0 and 3 
 While sensors that can accurately measure torques in this range do exist, any measurements may suffer from large
 cross-torques induced by the rider in directions orthogonal to the steer axis.
 In these cases, others have designed ways to obtain an accurate measurement of steer torque\cite{moore2012}.
-However, given that a high resolution encoder to measure steer angle, we numerically compute the steer
+However, given that a high resolution encoder measures steer angle, we numerically compute the steer
 angular acceleration $ \ddot{\steer} $ in order to estimate the rider applied steer torque $ T_\steer $.
 
 The dynamics of the physical handlebars are described by the following equation of motion
@@ -251,13 +251,9 @@ process noise covariance matrix $ \processCov $ and measurement noise covariance
 % TODO: mention that Q > 0 and R >= 0?
 The noise covariance matrices are assumed constant when the system has reached steady-state
 (i.e. $ v $ is not changing with time). % what about steady turning?
-
 As a result, we obtain the optimal Kalman gain matrix $ \kalmanGain $
 %and estimate covariance matrix $ \estimateCov $
-parameterized by forward speed $ v $, and can estimate the system state
-\begin{equation}
-    \stateEst = \kalmanGain \meas
-\end{equation}
+parameterized by forward speed $ v $, as well as system state estimate $ \stateEst $.
 
 \subsection{Kinematics}
 
@@ -300,12 +296,15 @@ The simulation engine acts as a root node in the network topology and data is co
 \subsection{Visualization}
 The simulator visualization is built using \href{https://unity3d.com/}{Unity}, a cross-platform game engine used to
 develop video games.
-The Unity Editor is used to create a virtual environment and defines a basic description for the bicycle model;
+The Unity Editor is used to create a virtual environment and to define a basic description for the bicycle model;
 an example of the virtual environment is provided in \autoref{fig:unity}.
-Sizes of the bicycle object shapes are provided by the simulation engine, dependent on the parameters used in the
-bicycle model.
-The coordinates describing the position and orientation of the bicycle within the virtual environment are calculated and
-transmitted by the simulation engine.
+
+The bicycle is composed of a hierarchy of basic shapes which are grouped into the rear wheel, rear frame, front frame,
+and front wheel, as is done in the bicycle model.
+Shape size is dependent on parameters used by the bicycle model and are transmitted at the start of the simulation.
+Physics effects are disabled as the bicycle is modeled and simulated separately.
+Upon receiving the bicycle coordinates, the translation of the $ xy $-contact point and relative rotations for each body
+are set.
 
 \begin{figure}
     \centering
@@ -354,9 +353,43 @@ the discrete time state space be computed at each forward speed $ v $.
 % but there is no need to perform all the repeated integration steps as
 % we obtain a difference equation. (plus measurement shows it to be faster)
 
-TODO: discrete time implementation of Kalman filter\\
-selection of process and noise covariance
-% Need to discretize Kalman noise covariance matrices!  https://en.wikipedia.org/wiki/Discretization
+The full state is estimated to obtain the virtual roll angle $ \roll $ and roll rate $ \rollRate $ of the bicycle.
+The equations in \autoref{eq:kalman_ss} are discretized in order to use \autoref{eq:c2d}.
+The Kalman filter is implemented in standard recursive form with a state prediction step (\textit{a priori})
+\begin{equation}
+\begin{aligned}
+    \stateEst^-[k] &= \stateMat_d \stateEst[k - 1] + \inputMat_d \sysInput[k] \\
+    \estimateCov^-[k] &= \stateMat_d \estimateCov[k - 1] \stateMat_d^T + \processCov
+\end{aligned}
+\end{equation}
+followed by a measurement update step (\textit{a posteriori})
+\begin{equation}
+\begin{aligned}
+    \kalmanGain[k] &= \estimateCov^-[k] \outputMat_d^T (\outputMat_d \estimateCov^-[k] \outputMat_d^T + \measCov)^{-1} \\
+    \stateEst[k] &= \stateEst^-[k] + \kalmanGain[k] (\meas[k] - \outputMat_d \stateEst^-[k] ) \\
+    \estimateCov[k] &= (\bm{I} - \kalmanGain[k] \outputMat_d) \estimateCov^-[k]
+\end{aligned}
+\end{equation}
+where $ \estimateCov $ is the estimate error covariance and ($ ^- $) denotes the term is an \textit{a priori} estimate.
+As the model state space matrices described in \autoref{eq:c2d} are parameterized by $ v $, changes in these matrices
+are incorporated in the filter prediction and update steps.
+Process noise covariance $ \processCov $ and measurement noise covariance $ \measCov $ are taken constant over the
+course of the simulation: changes in the model are reflected in state matrices and sensors do not display any
+time-dependent behavior.
+
+In selecting the process noise covariance, we consider the system to be an approximation of a constant-velocity
+particle\cite{reid2001} as the state vector $ \state $ contains system coordinates and speeds.
+We expect a greater order of noise in the system speeds compared to system coordinates and use
+\begin{equation}
+    \processCov = q \begin{bmatrix}
+        T_s & 0 & \frac{1}{2}T_s^2 & 0 \\
+        0 & T_s & 0 & \frac{1}{2}T_s^2 \\
+        \frac{1}{2}T_s^2 & 0 & \frac{1}{3}T_s^3 & 0 \\
+        0 & \frac{1}{2}T_s^2 & 0 & \frac{1}{3}T_s^3 \\
+    \end{bmatrix}
+\end{equation}
+where $ q $ is the uncertainty in $ \steer $ and $ \roll $ due to discretization with sample time $ T_s $.
+Measurement noise covariance $ \measCov $ is derived from sensor noise characteristics.
 
 \subsubsection{Kinematics}
 The kinematics loop calculates system coordinates required for visualization separately from the dynamics.
@@ -438,6 +471,11 @@ Kollmorgen specified protocol
 \end{table}
 
 \section{Conclusions}
+\section{Future work}
+\begin{itemize}
+    \item Feedback terrain data from virtual environment to affect steering feel
+    \item Implement realistic pedaling
+\end{itemize}
 
 \section{Acknowledgments}
 We gratefully acknowledge the European Commission for their support of the Marie Curie Initial Training Network (ITN)

@@ -114,13 +114,29 @@ come from use of simulators over instrumented vehicles /in real-world environmen
 As the rider bicycle system is unstable, simulators allow for tests of scenarios that have high risk of injury if
 instrumented bicycles were to be used.
 
-There is little work focused on human rider control using a bicycle simulator.
-Plumert describes a bicycle simulator used to study rider behavior in traffic\cite{plumert2004} where an
-instrumented bicycle is used to determine motion in a virtual environment.
-% TODO: check other bicycle simulator research
+There have been a number of groups that have developed bicycle simulators for a variety of research goals.
+The Korean Advanced Institute of Science and Technology has developed a pair of networked bicycle simulators to simulate
+racing environments\cite{kwon2002}.
+The simulators are built on a Stewart platforms and include steering and pedaling subsystems.
+The bicycle dynamics assume that the mass of the frame and handlebar are evenly distributed between the front and rear
+wheels.
+Yin and He also describe the design of a simulator mounted on a Stewart platform with steering and pedaling
+subsystems\cite{he2005, yin2007implementation} which is sued to study rider-bicycle models\cite{yin2007study}.
+Additionally, the virtual environment is displayed using 3 projectors to create an immersive environment.
+The bicycle dynamics are an implementation of the equations derived by Hand\cite{hand1988}.
+Input torques are estimated from the measured acceleration of the respective coordinate.
+Other bicycle simulators have been developed to study cognitive processes and focus less on realistic modeling of
+bicycle dynamics.
+FIVIS simulator is also designed using an entire bicycle mounted on a Stewart platform and similarly uses multiple
+projectors to create an immersive visual environment\cite{herpers2008}.
+It is used for safety education and rider training.
+Plumert describes a bicycle simulator used to study rider behavior and decision making in traffic\cite{plumert2004}
+where an instrumented bicycle on rollers is used to determine motion in a virtual environment.
 The study focuses on rider perception and accurate steering feel is not addressed.
 Other research using this simulator also focuses on rider behavior and decision making in
 traffic\cite{plumert2007,chihak2010,grechkin2013}.
+Similarly, Caro uses an instrumented bicycle on rollers to drive a bicycle in a virtual environment to study rider's
+speed perception\cite{caro2015}.
 De Lange created a simulator in MATLAB with the rider controlling the virtual bicycle by means of a
 gamepad\cite{delange2011}.
 His simulator provides visual but not vestibular or proprioceptive feedback and de Lange determines it the
@@ -184,7 +200,7 @@ angular acceleration $ \ddot{\steer} $ in order to estimate the rider applied st
 
 The dynamics of the physical handlebars are described by the following equation of motion
 \begin{equation}
-    I_\steer \ddot{\steer} = T_\steer- T_f
+    I_\steer \ddot{\steer} = T_\steer- T_f \label{eq:handlebar_eom}
 \end{equation}
 where $ I_\steer $ is the moment of inertia of the handlebar about the steer axis and $ T_f $ the feedback torque
 applied to the handlebars.
@@ -352,6 +368,9 @@ the discrete time state space be computed at each forward speed $ v $.
 % note that ode integration for a \textit{single} time step may be slower, \\
 % but there is no need to perform all the repeated integration steps as
 % we obtain a difference equation. (plus measurement shows it to be faster)
+
+The input torque $ \sysInput[k] $ is estimated using \autoref{eq:handlebar_eom} and a numerical derivative of
+acceleration of the handlebar encoder similar to other bicycle simulators\cite{he2005}.
 
 The full state is estimated to obtain the virtual roll angle $ \roll $ and roll rate $ \rollRate $ of the bicycle.
 The equations in \autoref{eq:kalman_ss} are discretized in order to use \autoref{eq:c2d}.
